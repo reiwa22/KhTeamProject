@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mappers.cjhcart-mapper">
+	
+	<insert id="insertCart">
+		insert into tbl_cart (c_num, u_id, p_num, p_name, p_price, p_content, p_count, p_size, p_main, p_serve)
+		values (seq_c_num.nextval, #{u_id}, #{p_num}, #{p_name}, #{p_price}, #{p_content}, #{p_count}, #{p_size}, #{p_main}, #{p_serve})
+	</insert>
+
+<!-- 	<select id="getCart" resultType="CjhCartVo"> -->
+<!-- 		select * from tbl_cart -->
+<!-- 		where u_id = #{u_id} and p_status = 1001 -->
+<!-- 	</select> -->
+	<select id="getCart" resultType="CjhCartVo">
+		select a.title_name, c.p_name, c.p_price, c.p_count, c.p_size, c.p_num, c.c_num
+		from tbl_cart c, tbl_title_attach a
+		where u_id=#{u_id}
+		and c.p_num = a.p_num
+		and c.p_status = 1001
+	</select>
+	
+	<select id="getOrder" resultType="CjhCartVo">
+		select * 
+			from (select rownum rnum, a.*
+            	from (select c.c_num, a.title_name, c.p_name, c.p_count, c.p_price, c.p_date, o.o_status, c.p_size
+					from tbl_cart c, tbl_order_code o, tbl_title_attach a
+					where u_id = #{u_id}
+					and c.p_status = o.o_code
+					and c.p_num = a.p_num
+					<include refid="cstatus"/>
+					order by c.p_date desc ) a)
+		where rnum between #{pagingDto.startRow} and #{pagingDto.endRow}
+	</select>
+	
+	<delete id="deleteCart">
+		delete from tbl_cart
+		where u_id = #{u_id} and c_num = #{c_num}
+	</delete>
+	
+	<delete id="deleteCheckedCart">
+		delete from tbl_cart
+		where u_id = #{u_id}
+		and p_status = 1001
+		and p_num in ( #{p_nums[i]} )
+	</delete>
+	
+	<select id="getCountCart" resultType="int">
+		select count(*) from tbl_cart
+		where u_id = #{u_id} and p_status = 1001
+	</select>
+	
+	<update id="updateCart">
+		update tbl_cart set
+		p_count = #{p_count}
+		where u_id = #{u_id} and c_num = #{c_num}
+	</update>
+	
+	<update id="orderCartUpdate">
+		update tbl_cart set
+		p_status = 1002,
+		p_date = sysdate
+		where u_id = #{u_id} and p_status = 1001
+	</update>
+	
+	<update id="minusCount">
+		update tbl_product_count set
+		p_count = p_count - #{p_count}
+		where p_num = #{p_num}
+		and p_size = #{p_size}
+	</update>
+	
+	<select id="checkCart" resultType="int">
+		select count(*) from tbl_cart
+		where u_id = #{u_id}
+		and p_num = #{p_num}
+		and p_status = 1001
+		and p_size = #{p_size}
+	</select>
+	
+	<update id="updateDupCart">
+		update tbl_cart set
+		p_count = p_count + #{p_count}
+		where u_id = #{u_id} and p_size = #{p_size} and p_num = #{p_num}
+	</update>
+	
+	<update id="confirmOrder">
+		update tbl_cart set
+		p_status = 1006
+		where c_num = #{c_num}
+	</update>
+	
+	<select id="getCountOrder" resultType="int">
+		select count(*) from tbl_cart
+		where u_id = #{u_id}
+		<include refid="status"/>
+	</select>
+	
+	<select id="getUserOrder" resultType="int">
+		select count(*) from tbl_cart
+		where u_id = #{u_id}
+		and p_status != 1001
+	</select>
+	
+<!-- 	상품개수 구하기 -->
+	<select id="getPCount" resultType="int">
+		select p_count from tbl_product_count
+		where p_num = #{p_num}
+		and p_size = #{p_size}
+	</select>
+	
+	<sql id="cstatus">
+		<if test="#{p_status} != null">
+			<choose>
+				<when test='p_status == 1'>
+					and c.p_status != 1001
+				</when>
+				<when test='p_status == 1002'>
+					and c.p_status = 1002
+				</when>
+				<when test='p_status == 1003'>
+					and c.p_status = 1003
+				</when>
+				<when test='p_status == 1004'>
+					and c.p_status = 1004
+				</when>
+				<when test='p_status == 1005'>
+					and c.p_status = 1005
+				</when>
+				<when test='p_status == 1006'>
+					and c.p_status = 1006
+				</when>
+			</choose>
+		</if>
+	</sql>
+	
+	<sql id="status">
+		<if test="#{p_status} != null">
+			<choose>
+				<when test='p_status == 1'>
+					and p_status != 1001
+				</when>
+				<when test='p_status == 1002'>
+					and p_status = 1002
+				</when>
+				<when test='p_status == 1003'>
+					and p_status = 1003
+				</when>
+				<when test='p_status == 1004'>
+					and p_status = 1004
+				</when>
+				<when test='p_status == 1005'>
+					and p_status = 1005
+				</when>
+				<when test='p_status == 1006'>
+					and p_status = 1006
+				</when>
+			</choose>
+		</if>
+	</sql>
+</mapper>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mappers.member-mapper">
+
+
+	<!-- 로그인 -->
+	<select id="selectMemberUserIdPw" resultType="JmMemberVo">
+
+		select * from tbl_user
+		where u_id =#{u_id} and u_pw=#{u_pw}
+ 
+	</select>
+	
+	<!-- 등급 세션 가져오기 -->
+	<select id="selectGrade" resultType="string">
+		select u_grade from tbl_user
+		where u_id =#{u_id}
+	
+	</select>
+	
+	
+
+	<!-- 회원가입 -->
+	
+	<insert id="insertMember">
+		
+		insert into tbl_user(u_info,u_id ,u_pw ,u_name,u_gender, u_email,u_address, u_phone)
+		values (seq_user_count.nextval,#{u_id}, #{u_pw},#{u_name},#{u_gender},#{u_email},#{u_address},#{u_phone})
+	
+	</insert>
+	
+	<!-- 관리자 페이지 - 회원목록 -->
+		<select id="selectList" resultType="JmMemberVo">
+		
+		select * from TBL_USER order by u_info
+		
+		</select>
+	
+	<!-- 관리자 페이지 - 회원정보 개인별 조회 -->
+		<select id="selectById" resultType="JmMemberVo">
+		
+		select * from tbl_user
+		where u_id=#{u_id}
+	
+		</select>
+	
+	
+	
+	<!-- 관리자 페이지 - 회원정보 수정 -->
+		<update id="updateUser">
+		
+		update tbl_user set
+		u_name= #{u_name},
+		u_email= #{u_email},
+		u_address= #{u_address},
+		u_phone= #{u_phone},
+		u_grade= #{u_grade}
+		where u_id= #{u_id}
+	
+		</update>
+	
+	<!-- 관리자 페이지 - 회원정보 삭제 -->
+	<delete id="deleteUser">
+		delete from tbl_user 
+		where u_id=#{u_id}
+	
+	</delete>
+	
+	 <!-- 관리자 Q&A 게시판 답글 달기 -->
+	 <insert id="contactManagerInsert">
+	insert into tbl_contact(c_info, c_id,c_subject,c_contents,c_originnum,c_groupold)
+	values (seq_contact.nextval, #{c_id},#{c_subject},#{c_contents},#{c_originnum}, (select max(c_groupold) from tbl_contact)+1)
+
+	</insert> 
+	
+	<!-- 관리자 Q&A 게시판 삭제기능 -->
+		<delete id="deleteContact">
+		
+		delete from tbl_contact
+		where c_info = #{c_info}
+		
+		</delete>
+	
+	
+	 
+	
+	<!-- 관리자 c_originnum 찾기  -->
+	<select id="selectOriginNum" resultType="int">
+	select c_originnum from tbl_contact 
+	where c_info =#{c_info}
+	
+	</select>
+	
+	<!-- 비밀번호 찾기(이메일 찾기) -->
+	<select id="selectPw" resultType="JmPwEmailDto">
+		select u_email,u_pw from tbl_user
+		where u_id = #{u_id}
+	
+	
+	</select>
+	
+	<!-- 아이디 중복체크 -->
+		<select id="selectId" resultType="string">
+			select u_id from tbl_user
+			where u_id = #{u_id}
+		
+		</select>
+	
+	
+	<!-- 검색 -->
+		<sql id="searchUser">
+		
+			<if test= "searchType !=null">
+			<choose>
+				<when test='searchType =="u_id"'>
+					where u_id like '%'||#{keyword}||'%'
+				</when>
+				
+				<when test='searchType =="u_grade"'>
+					where u_grade like '%'||#{keyword}||'%'
+				
+				</when>
+				
+					
+			</choose>
+			</if>
+		</sql>
+	
+	<!-- 페이징 -->
+		<select id="selectUserPaging" resultType="JmMemberVo">
+			select * 
+			from(select rownum rnum,a.*
+			from(select * from tbl_user
+			<include refid="searchUser"></include>
+			order by u_info desc)a)
+			where rnum between #{startRow} and #{endRow}
+		</select>
+		
+		
+	<!-- 게시글 수 조회 -->
+		<select id="selectUserCount" resultType="int">
+			select count(*) from tbl_user
+			<include refid="searchUser"></include>
+		
+		</select>	
+	
+	
+	
+	
+	
+	
+</mapper>
+
+
+
+
+

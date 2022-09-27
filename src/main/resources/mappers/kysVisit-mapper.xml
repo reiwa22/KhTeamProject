@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mappers.kysVisit-mapper">
+	<!-- 일일 매출 -->
+	<select id="salesList" resultType="KysVisitCountVo">
+		select rownum, a.* from( 
+select to_char(CAST(p_date AS DATE) ,'yyyy-mm-dd') p_date, count(*) cnt,sum(p_price) p_price
+		from tbl_cart 
+		where p_status = 1006
+		group by to_char(CAST(p_date AS DATE) ,'yyyy-mm-dd'), p_status
+		order by p_date
+        )a 
+        where rownum between 1 and 7
+	</select>
+
+	<!-- 주문 목록 -->
+	<select id="orderList" resultType="KysVisitCountVo">
+		select * from tbl_cart
+		where p_status = 1002
+	</select>
+	
+	<!-- 총 방문자수 가져오기 -->
+	<select id="visitAll" resultType="int">
+		select count(*) as TotalCnt from tbl_visitor
+	</select>
+	<!-- 오늘 방문자수 가져오기 -->
+	<select id="visitNow" resultType="int">
+		select count(*) as TodayCon from tbl_visitor
+		where to_date(visit_time,'YY-MM-DD') = to_date(sysdate, 'YY-MM-DD')
+	</select>
+	<!-- 일별 데이터 가져오기 -->
+	<select id="rodChart" resultType="KysVisitCountVo">
+		select rownum, a.* from( 
+			select  visit_time , count(*) as todaycon from  tbl_visitor
+			group by visit_time 
+       		order by visit_time desc)a 
+        where rownum between 1 and 7
+	</select>
+	<!-- 방문자수를 증가시키는 -->
+	<insert id="insertVisitor" >
+		insert into tbl_visitor(
+				visit_id,
+				visit_ip,
+				visit_time)
+		values(
+		seq_visit.nextval,#{visit_ip},
+		sysdate)
+	</insert>
+	<!-- 배송 상태 업뎃 -->
+	<update id="updateStatus">
+		update tbl_cart set 
+        p_status = #{p_status}
+        where u_id = #{u_id} and p_num = #{p_num}
+	</update>
+
+</mapper>	

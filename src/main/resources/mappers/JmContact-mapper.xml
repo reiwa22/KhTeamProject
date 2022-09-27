@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mappers.contact-mapper">
+
+
+	<!-- Contact게시판 리스트 조회 -->
+		<select id="selectContactList" resultType="JmContactVo">
+			select * from  tbl_contact order by c_originnum desc,c_groupold asc
+		</select>
+
+	
+	<!-- Contact 게시판 info 조회 -->
+		<select id="selectContactInfo" resultType="JmContactVo">
+		select * from tbl_contact
+    	where  c_info = #{c_info} 
+		</select>
+		
+	
+		
+		
+		
+		
+	<!-- Contact 게시판 글쓰기 -->
+		<insert id="insertContact">
+		insert into tbl_contact(c_info, c_id,c_subject,c_contents,c_originnum)
+		values (seq_contact.nextval, #{c_id},#{c_subject},#{c_contents}, (select nvl(max(c_originnum),0) from tbl_contact)+1)
+		
+		</insert>
+		
+	<!-- Contact 게시판 업데이트 -->
+		<update id="updateContact" >
+		
+		update tbl_Contact set 
+   	 		c_subject = #{c_subject},
+   			c_contents = #{c_contents}	
+    	where c_info= #{c_info}
+		
+		</update>
+		
+	
+		
+	<!-- 검색 -->	
+	<sql id="search">
+	
+	<if test="searchType !=null">
+		<choose>
+			<when test='searchType == "c_subject"'>
+				where c_subject like '%' || #{keyword}|| '%'
+			</when>
+
+			<when test='searchType == "c_id"'>
+				where c_id like '%' || #{keyword}|| '%'
+			</when>
+		</choose>
+	</if>	
+	</sql>	
+		
+	
+	<!-- 페이징 -->
+	<select id="selectPaging" resultType="JmContactVo">
+		select *
+		from(select rownum rnum,a.*
+		from(select * from tbl_contact
+		<include refid="search"></include>
+		order by c_originnum desc,c_groupold asc)a)
+		where rnum between #{startRow} and #{endRow}
+	</select>
+	
+	<!--  게시글 수 조회 -->
+	<select id="selectCount" resultType="int">
+		select count(*) from tbl_contact
+		<include refid="search"></include>
+	
+	</select>
+		
+	<!-- 조회수 증가 -->	
+	<update id="updateViewCount">
+		update tbl_contact set
+		c_viewcnt = c_viewcnt+1
+		where c_info = #{c_info}
+	
+	
+	</update>
+	
+		
+		
+		
+		
+		
+		
+		
+		
+</mapper>

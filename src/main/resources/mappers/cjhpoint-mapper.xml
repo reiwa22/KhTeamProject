@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mappers.cjhpoint-mapper">
+
+	<insert id="signUpPoint">
+		insert into tbl_point (point_num, point_code, u_id, point_value)
+		values (seq_point_num.nextval, 1001, #{u_id}, 500000)
+	</insert>
+	
+	<update id="signUpUser">
+		update tbl_user set
+			u_point = (select u_point from tbl_user
+					   where u_id = #{u_id}) + 500000
+		where u_id = #{u_id}
+	</update>
+
+	<update id="usePoint">
+		update tbl_user set
+			u_point = (select u_point from tbl_user
+					   where u_id = #{u_id}) - #{totalPrice}
+		where u_id = #{u_id}
+	</update>
+	
+	<update id="getPoint">
+		update tbl_user set
+			u_point = (select u_point from tbl_user
+					   where u_id = #{u_id}) + #{totalPrice}
+		where u_id = #{u_id}
+	</update>
+	
+	<insert id="plusPoint">
+		insert into tbl_point (point_num, point_code, u_id, point_value)
+		values (seq_point_num.nextval, 1002, #{u_id}, #{totalPrice})
+	</insert>
+	
+	<insert id="minusPoint">
+		insert into tbl_point (point_num, point_code, u_id, point_value)
+		values (seq_point_num.nextval, 1003, #{u_id}, #{totalPrice})
+	</insert>
+	
+	<select id="getUserPoint" resultType="int">
+		select u_point from tbl_user
+		where u_id = #{u_id}
+	</select>
+	
+	<select id="getTotalPoint" resultType="int">
+		select sum(point_value)
+		from tbl_point
+		where u_id= #{u_id}
+		and point_code != 1003
+	</select>
+	
+	<select id="getUsePoint" resultType="int">
+		select sum(point_value)
+		from tbl_point
+		where u_id= #{u_id}
+		and point_code = 1003
+	</select>
+	
+<!-- 	<select id="listPoint" resultType="CjhPointVo"> -->
+<!-- 		select * -->
+<!-- 		p.point_num, p.point_code, p.u_id, p.point_value, c.point_content, p.point_date -->
+<!-- 		from tbl_point p, tbl_point_code c -->
+<!-- 		where u_id = #{u_id} -->
+<!-- 		and p.point_code = c.point_code -->
+<!-- 		<include refid="ppoint"/> -->
+<!-- 		order by point_num desc -->
+<!-- 	</select> -->
+	
+	<select id="listPoint" resultType="CjhPointVo">
+		select * 
+			from (select rownum rnum, a.*
+				from (select p.point_num, p.point_code, p.u_id, p.point_value, c.point_content, p.point_date
+					from tbl_point p, tbl_point_code c
+					where u_id = #{u_id}
+					and p.point_code = c.point_code
+					<include refid="ppoint"/>
+					order by point_num desc) a)
+		where rnum between #{pagingDto.startRow} and #{pagingDto.endRow}
+	</select>
+	
+	<select id="getPointCount" resultType="int">
+		select count(*) from tbl_point
+		where u_id = #{u_id}
+		<include refid="point"/>
+	</select>
+	
+	<sql id="ppoint">
+		<if test="#{point_code} != null">
+			<choose>
+				<when test='point_code == 1'>
+				</when>
+				<when test='point_code == 1002'>
+					and p.point_code in (1001, 1002)
+				</when>
+				<when test='point_code == 1003'>
+					and p.point_code = 1003
+				</when>
+			</choose>
+		</if>
+	</sql>
+	
+	<sql id="point">
+		<if test="#{point_code} != null">
+			<choose>
+				<when test='point_code == 1'>
+				</when>
+				<when test='point_code == 1002'>
+					and point_code in (1001, 1002)
+				</when>
+				<when test='point_code == 1003'>
+					and point_code = 1003
+				</when>
+			</choose>
+		</if>
+	</sql>
+
+</mapper>

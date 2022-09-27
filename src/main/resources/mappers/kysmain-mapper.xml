@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+	<mapper namespace="mappers.kysmain-mapper">
+	<!-- serve리스트 -->
+	<select id="mainList" resultType="Kys_MainVo">
+		select * from tbl_Main
+	</select>
+	<!-- 상품 1개 항목 보기 -->
+	<select id="OenMain" resultType="Kys_MainVo">
+		select * from tbl_Main
+		where main_code = #{main_code}
+	</select>
+	<!-- serve리스트 -->
+	<select id="serveList" resultType="Kys_ServeVo">
+		select * from tbl_serve
+	</select>
+	<!-- 상품 1개 항목 보기 -->
+	<select id="OenServeList" resultType="Kys_ServeVo">
+		select * from tbl_serve
+		where serve_code = #{serve_code}
+	</select>
+	<!-- 사이즈 가져오기 -->
+	<select id="dress_size" resultType="Kys_MainVo">
+		select * from tbl_dress_size
+		where main_code = #{main_code}
+	</select>
+	
+	
+	</mapper>
+
